@@ -1,0 +1,75 @@
+Sub AggregateWeeklyDemand()
+    Dim ws As Worksheet
+    Dim newWs As Worksheet
+    Dim lastRow As Long
+    Dim currentRow As Long
+    Dim dateCell As Range
+    Dim materialCode As String
+    Dim demand As Double
+    Dim startDate As Date
+    Dim weekNumber As Integer
+    Dim colOffset As Integer
+    Dim summaryDict As Object
+    Dim materialDict As Object
+    Dim key As Variant
+    Dim material As Variant
+    
+    ' Initialize dictionaries
+    Set summaryDict = CreateObject("Scripting.Dictionary")
+    Set materialDict = CreateObject("Scripting.Dictionary")
+    
+    ' Set worksheet
+    Set ws = ThisWorkbook.Sheets("Sheet1")
+    
+    ' Find last row of data
+    lastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
+    
+    ' Define the starting date
+    startDate = DateSerial(2019, 1, 2)
+    
+    ' Loop through each row
+    For currentRow = 2 To lastRow
+        Set dateCell = ws.Cells(currentRow, 1)
+        materialCode = ws.Cells(currentRow, 2).Value
+        demand = ws.Cells(currentRow, 3).Value
+        weekNumber = Application.WorksheetFunction.RoundUp((dateCell.Value - startDate) / 7, 0)
+        
+        key = materialCode & "_" & weekNumber
+        
+        If Not summaryDict.exists(key) Then
+            summaryDict.Add key, demand
+        Else
+            summaryDict(key) = summaryDict(key) + demand
+        End If
+        
+        If Not materialDict.exists(materialCode) Then
+            materialDict.Add materialCode, True
+        End If
+    Next currentRow
+    
+    ' Create new worksheet for summary
+    Set newWs = ThisWorkbook.Sheets.Add
+    newWs.Name = "WeeklySummary"
+    
+    ' Write headers
+    newWs.Cells(1, 1).Value = "物料编码"
+    For colOffset = 1 To 52
+        newWs.Cells(1, colOffset + 1).Value = "第" & colOffset & "周"
+    Next colOffset
+    
+    ' Write data from dictionary to new worksheet
+    currentRow = 2
+    For Each material In materialDict.keys
+        newWs.Cells(currentRow, 1).Value = material
+        For colOffset = 1 To 52
+            key = material & "_" & colOffset
+            If summaryDict.exists(key) Then
+                newWs.Cells(currentRow, colOffset + 1).Value = summaryDict(key)
+            Else
+                newWs.Cells(currentRow, colOffset + 1).Value = 0
+            End If
+        Next colOffset
+        currentRow = currentRow + 1
+    Next material
+End Sub
+

@@ -1,0 +1,51 @@
+Sub CalculateAveragePrice()
+    Dim ws As Worksheet
+    Dim newWs As Worksheet
+    Dim lastRow As Long
+    Dim currentRow As Long
+    Dim materialCode As String
+    Dim salesPrice As Double
+    Dim summaryDict As Object
+    Dim countDict As Object
+    Dim key As Variant
+    
+    ' Initialize dictionaries
+    Set summaryDict = CreateObject("Scripting.Dictionary")
+    Set countDict = CreateObject("Scripting.Dictionary")
+    
+    ' Set worksheet
+    Set ws = ThisWorkbook.Sheets("Sheet1")
+    
+    ' Find last row of data
+    lastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
+    
+    ' Loop through each row
+    For currentRow = 2 To lastRow
+        materialCode = ws.Cells(currentRow, 2).Value
+        salesPrice = ws.Cells(currentRow, 4).Value
+        
+        If Not summaryDict.exists(materialCode) Then
+            summaryDict.Add materialCode, salesPrice
+            countDict.Add materialCode, 1
+        Else
+            summaryDict(materialCode) = summaryDict(materialCode) + salesPrice
+            countDict(materialCode) = countDict(materialCode) + 1
+        End If
+    Next currentRow
+    
+    ' Create new worksheet for summary
+    Set newWs = ThisWorkbook.Sheets.Add
+    newWs.Name = "AveragePriceSummary"
+    
+    ' Write headers
+    newWs.Cells(1, 1).Value = "物料编码"
+    newWs.Cells(1, 2).Value = "平均销售单价"
+    
+    ' Write data from dictionaries to new worksheet
+    currentRow = 2
+    For Each key In summaryDict.keys
+        newWs.Cells(currentRow, 1).Value = key
+        newWs.Cells(currentRow, 2).Value = summaryDict(key) / countDict(key)
+        currentRow = currentRow + 1
+    Next key
+End Sub

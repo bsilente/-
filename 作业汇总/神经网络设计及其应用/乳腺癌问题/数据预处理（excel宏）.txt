@@ -1,0 +1,18 @@
+Sub DeleteRowsWithQuestionMark()
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+
+    ' 使用活动工作表（可以修改为特定工作表）
+    Set ws = ActiveSheet
+
+    ' 找到最后一行
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+
+    ' 从最后一行往上遍历
+    For i = lastRow To 1 Step -1
+        If Application.WorksheetFunction.CountIf(ws.Rows(i), "?") > 0 Then
+            ws.Rows(i).Delete
+        End If
+    Next i
+End Sub
